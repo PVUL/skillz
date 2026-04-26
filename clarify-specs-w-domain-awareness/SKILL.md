@@ -1,5 +1,5 @@
 ---
-name: domain-model
+name: clarify-specs-w-domain-awareness
 description: Clarifying specs session that challenges your plan against the existing domain model, sharpens terminology, and updates documentation (CONTEXT.md, ADRs) inline as decisions crystallize. Use when user wants to stress-test a plan against their project's language and documented decisions.
 disable-model-invocation: true
 ---
