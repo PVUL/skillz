@@ -42,13 +42,18 @@ Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't
 
 Apply the **deletion test** to anything you suspect is shallow: would deleting it concentrate complexity, or just move it? A "yes, concentrates" is the signal you want.
 
-### 2. Present candidates
-Present a numbered list of [deepening](DEEPENING.md) opportunities. For each candidate:
+### 2. Record and Present Candidates
+Record each opportunity as its own markdown file in the `docs/opportunities/` directory (create the directory if it doesn't exist). Name them with an index and slug (e.g., `001-vault-storage-seam.md`).
 
+Each file must include the date and the exact contents specified below:
+
+- **Date** — current date
 - **Files** — which files/modules are involved
 - **Problem** — why the current architecture is causing friction
 - **Solution** — plain English description of what would change
 - **Benefits** — explained in terms of locality and leverage, and also in how tests would improve
+
+Then, present the numbered list of [deepening](DEEPENING.md) opportunities to the user.
 
 **Use CONTEXT.md vocabulary for the domain, and [LANGUAGE.md](LANGUAGE.md) vocabulary for the architecture.** If `CONTEXT.md` defines "Order," talk about "the Order intake module" — not "the FooBarHandler," and not "the Order service."
 
