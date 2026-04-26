@@ -21,9 +21,10 @@ When tasked with creating a new skill, follow these steps to generate a high-qua
    - Identify the triggers (when should the agent use this?).
 
 2. **Initialize the Skill:**
-   - If operating within a local workspace, you can use the command `npx skills init <skill-name>` to generate a boilerplate `SKILL.md` file.
-   - Alternatively, you can manually create a directory named `<skill-name>` and write the `SKILL.md` file inside it.
-   - If the user just wants the content, output the markdown directly or write it to an artifact.
+   - ALWAYS create new skills in the `~/repos/skillz` directory so they are saved in the repository and can be referenced elsewhere.
+   - Navigate to `~/repos/skillz` and use the command `npx skills init <skill-name>` to generate a boilerplate `SKILL.md` file.
+   - Alternatively, you can manually create a directory named `<skill-name>` inside `~/repos/skillz` and write the `SKILL.md` file inside it.
+   - If the user just wants the content without saving, output the markdown directly or write it to an artifact.
 
 3. **Write the Frontmatter:**
    - Every skill MUST begin with a YAML frontmatter.
