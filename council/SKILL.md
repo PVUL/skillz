@@ -1,6 +1,6 @@
 ---
 name: council
-description: Convene a council of model delegates (Claude Opus 5.5 and Claude Fable 5.1) to independently answer, review, or critique the same request, then synthesize their findings, disagreements, and next steps. For code reviews, score each round out of 10 and iterate fixes until every delegate is satisfied, without scope creep. Use when the user says "council", "ask the council", "get a second opinion", "council review", or wants multiple models to weigh in.
+description: Convene a council of model delegates (Claude Opus 5.5 and Claude Fable 5.1) to independently answer, review, or critique the same request, then synthesize their findings, disagreements, and next steps. For code reviews, score each round out of 10 — per rubric area, with a recorded reason for every score — and iterate fixes until every delegate is satisfied, without scope creep. Hill-climb rounds record scores and reasons as git notes the Hill Climb Diff app reads. Use when the user says "council", "ask the council", "get a second opinion", "council review", "hill climb", or wants multiple models to weigh in.
 ---
 
 # council
@@ -29,6 +29,7 @@ To add or remove a delegate, edit this table. Everything below applies to every 
 - Restate the request in one or two sentences, and decide whether it is a **question/plan** (answer and recommend) or a **review** (critique existing work).
 - Collect the relevant context so delegates don't start from zero: the user's request, relevant file paths, the diff (`but diff`, or `gh pr diff <n>` for an open PR), constraints, and anything already decided.
 - **Write down the scope** explicitly, e.g. "Scope: the retry logic added in `src/client.ts`. Out of scope: the logging refactor." This line goes into every delegate prompt and every later round.
+- **Decide the rubric.** For a hill-climb run (rounds the Hill Climb Diff app will read), the default rubric areas are **accuracy, clarity, structure, completeness, style**; the user can set different areas. For other code reviews a rubric is optional. Whatever rubric is set goes into every delegate prompt, every round.
 
 ### 2. Dispatch delegates in parallel
 
@@ -70,7 +71,11 @@ Out of scope: <...>  Do not recommend changes outside the scope.
 1. Summary (2-3 sentences)
 2. Blocking issues (must fix before you'd approve)
 3. Non-blocking suggestions
-4. Score: N/10   <- code reviews only; final line, exactly this format
+4. Scores   <- code reviews only
+   - When a rubric is set, one line per area: `<area>: N/10 — <reason>`. The reason
+     is required: say concretely what kept the score below 10 and what change would
+     raise it. A score with no reason doesn't count.
+   - Final line: `Score: N/10 — <overall reason>` (keep the `Score: N/10` prefix exact)
 5. Verdict: SATISFIED or NOT SATISFIED   <- code reviews only
 ```
 
@@ -91,12 +96,12 @@ Judge findings on their merits, not by vote count. A single correct blocking fin
 ### 4. Code review rounds
 
 - **Round:** one full review pass in which every delegate reviews the current state of the work. A fresh review after fixes starts a new round. Number rounds from 1.
-- **Score:** ask each delegate for a score out of 10 every round. Record exactly what it gave. If it gave no score, record `no score`. Never infer, estimate, or invent one.
+- **Score:** ask each delegate every round for an overall score out of 10 and, when a rubric is set, one score per area — each with its reason. Record exactly what it gave, scores and reasons both. If it gave no score, record `no score`; if it gave a score without a reason, keep the score and record `no reason given`. Never infer, estimate, or invent either.
 - **Loop:**
   1. Run a round (steps 2–3).
   2. For each recommendation, decide whether to **adopt** it (you agree and it's in scope), **reject** it (you disagree, with a reason), or **defer** it (valid but out of scope, so list it as a follow-up and don't do it).
-  3. Make the adopted changes yourself. Run relevant checks, and commit per the repo's VCS rules.
-  4. Start a fresh round. Tell each delegate what changed since the last round and why you rejected or deferred anything it raised. It can push back if it thinks a rejection is wrong.
+  3. Make the adopted changes yourself, aiming fixes at the recorded score reasons: a reason that's addressed should move that area's score next round. Run relevant checks, and commit per the repo's VCS rules.
+  4. Start a fresh round. Tell each delegate what changed since the last round and why you rejected or deferred anything it raised, and include that delegate's own previous scores and reasons, per area, so it can judge whether each reason has been addressed. It can push back if it thinks a rejection is wrong.
   5. Stop when every delegate returns `SATISFIED` with no remaining blocking issues.
 - **Deadlock:** if a delegate is still not satisfied after 3 rounds because of a disagreement you've already reasoned through (not a real unfixed bug), stop and ask the user to decide. Don't loop forever.
 
@@ -125,6 +130,32 @@ Rounds: 2
 ```
 
 Use `no score` in a cell when a delegate didn't give one, and `unavailable` when it failed to respond.
+
+### Hill-climb runs: record scores and reasons per round
+
+When rounds are committed one by one for the Hill Climb Diff app (the user says "hill climb", or round commits follow the `round N` convention), attach a git note to each round's commit after committing it:
+
+```bash
+git notes --ref hillclimb add -F <notefile> <commit>
+```
+
+The app parses the bare score lines above the first heading and displays everything after them, so lay the note out as:
+
+1. Score lines first, one per line, exactly this shape — **no reasons on these lines**:
+
+   ```
+   Claude Opus 5.5: 8/10
+   Claude Opus 5.5 / accuracy: 9/10
+   Claude Opus 5.5 / clarity: 8/10
+   Claude Fable 5.1: 8/10
+   ...
+   ```
+
+   One overall line plus one line per rubric area, per delegate. Omit any line the delegate didn't give.
+2. A blank line, then each delegate's full review under a `## <Delegate> — review` heading. Keep the review's `<area>: N/10 — <reason>` lines intact: they are the record of *why* each score was given, and the app shows them alongside the scores.
+3. End with `## Chair notes going into this round`: what was adopted, rejected, or deferred, and which score reasons the next round's fixes target.
+
+Also write a `base` note the same way on the parent commit of round 1, from the baseline review. These notes are the per-run record: the app displays the reasons, and later rounds read them to check whether each reason was addressed.
 
 Where the table goes:
 
